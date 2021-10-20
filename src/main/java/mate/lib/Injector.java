@@ -1,5 +1,9 @@
 package mate.lib;
 
+import mate.dao.ManufacturerDaoImpl;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -12,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Injector {
+    private static final Logger logger = LogManager.getLogger(Injector.class);
     private static final Map<String, Injector> injectors = new HashMap<>();
     private final Map<Class<?>, Object> instanceOfClasses = new HashMap<>();
     private final List<Class<?>> classes = new ArrayList<>();
@@ -20,6 +25,7 @@ public class Injector {
         try {
             classes.addAll(getClasses(mainPackageName));
         } catch (IOException | ClassNotFoundException e) {
+            logger.error("Can't get information about all classes", e.getMessage());
             throw new RuntimeException("Can't get information about all classes", e);
         }
     }
@@ -47,6 +53,8 @@ public class Injector {
                 newInstanceOfClass = getNewInstance(clazz);
                 setValueToField(field, newInstanceOfClass, classToInject);
             } else {
+                logger.error("Class " + field.getName() + " in class "
+                        + clazz.getName() + " hasn't annotation Inject");
                 throw new RuntimeException("Class " + field.getName() + " in class "
                         + clazz.getName() + " hasn't annotation Inject");
             }
@@ -68,6 +76,9 @@ public class Injector {
                 }
             }
         }
+        logger.error("Can't find class which implements "
+                + certainInterface.getName()
+                + " interface and has valid annotation (Dao or Service)");
         throw new RuntimeException("Can't find class which implements "
                 + certainInterface.getName()
                 + " interface and has valid annotation (Dao or Service)");
@@ -87,6 +98,7 @@ public class Injector {
         try {
             return field.get(instance) != null;
         } catch (IllegalAccessException e) {
+            logger.error("Can't get access to field");
             throw new RuntimeException("Can't get access to field");
         }
     }
@@ -97,6 +109,7 @@ public class Injector {
             Constructor<?> classConstructor = clazz.getConstructor();
             newInstance = classConstructor.newInstance();
         } catch (Exception e) {
+            logger.error("Can't create object of the class", e.getMessage());
             throw new RuntimeException("Can't create object of the class", e);
         }
         return newInstance;
@@ -107,6 +120,7 @@ public class Injector {
             field.setAccessible(true);
             field.set(instanceOfClass, classToInject);
         } catch (IllegalAccessException e) {
+            logger.error("Can't set value to field ", e.getMessage());
             throw new RuntimeException("Can't set value to field ", e);
         }
     }
@@ -124,6 +138,7 @@ public class Injector {
             throws IOException, ClassNotFoundException {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         if (classLoader == null) {
+            logger.error("Class loader is null");
             throw new RuntimeException("Class loader is null");
         }
         String path = packageName.replace('.', '/');
@@ -159,6 +174,7 @@ public class Injector {
             for (File file : files) {
                 if (file.isDirectory()) {
                     if (file.getName().contains(".")) {
+                        logger.error("File name shouldn't consist point.");
                         throw new RuntimeException("File name shouldn't consist point.");
                     }
                     classes.addAll(findClasses(file, packageName + "."

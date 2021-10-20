@@ -10,8 +10,11 @@ import mate.exception.AuthenticationException;
 import mate.lib.Injector;
 import mate.model.Driver;
 import mate.service.AuthenticationService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LoginDriverController extends HttpServlet {
+    private static final Logger logger = LogManager.getLogger(LoginDriverController.class);
     private static final String SESSION_ATTRIBUTE_ID = "driver_id";
     private static final Injector injector = Injector.getInstance("mate");
     private final AuthenticationService authenticationService = (AuthenticationService) injector
@@ -33,7 +36,9 @@ public class LoginDriverController extends HttpServlet {
             HttpSession session = req.getSession();
             session.setAttribute(SESSION_ATTRIBUTE_ID, driver.getId());
             resp.sendRedirect("/index");
+            logger.info("New user been added");
         } catch (AuthenticationException e) {
+            logger.error("Can't login: ", e.getMessage());
             req.setAttribute("errorMessage", e.getMessage());
             req.getRequestDispatcher("/WEB-INF/views/login.jsp").forward(req, resp);
         }

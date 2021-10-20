@@ -12,9 +12,12 @@ import mate.exception.DataProcessingException;
 import mate.lib.Dao;
 import mate.model.Driver;
 import mate.util.ConnectionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Dao
 public class DriverDaoImpl implements DriverDao {
+    private static final Logger logger = LogManager.getLogger(DriverDaoImpl.class);
     @Override
     public Optional<Driver> findByLogin(String login) {
         String getDriverByLoginQuery = "SELECT * FROM drivers WHERE login = ? "
@@ -29,6 +32,7 @@ public class DriverDaoImpl implements DriverDao {
             }
             return Optional.ofNullable(driver);
         } catch (SQLException e) {
+            logger.error("Couldn't get driver with login " + login, e.getMessage());
             throw new DataProcessingException("Couldn't get driver with login " + login, e);
         }
     }
@@ -51,6 +55,8 @@ public class DriverDaoImpl implements DriverDao {
             }
             return driver;
         } catch (SQLException e) {
+            logger.error("Couldn't create "
+                    + driver + ". ", e.getMessage());
             throw new DataProcessingException("Couldn't create "
                     + driver + ". ", e);
         }
@@ -69,6 +75,7 @@ public class DriverDaoImpl implements DriverDao {
             }
             return Optional.ofNullable(driver);
         } catch (SQLException e) {
+            logger.error("Couldn't get driver by id " + id, e.getMessage());
             throw new DataProcessingException("Couldn't get driver by id " + id, e);
         }
     }
@@ -85,6 +92,8 @@ public class DriverDaoImpl implements DriverDao {
             }
             return drivers;
         } catch (SQLException e) {
+            logger.error("Couldn't get a list of drivers from driversDB.",
+                    e.getMessage());
             throw new DataProcessingException("Couldn't get a list of drivers from driversDB.",
                     e);
         }
@@ -106,6 +115,8 @@ public class DriverDaoImpl implements DriverDao {
             updateDriverStatement.executeUpdate();
             return driver;
         } catch (SQLException e) {
+            logger.error("Couldn't update "
+                    + driver + " in driversDB.", e.getMessage());
             throw new DataProcessingException("Couldn't update "
                     + driver + " in driversDB.", e);
         }
@@ -119,6 +130,7 @@ public class DriverDaoImpl implements DriverDao {
             deleteDriverStatement.setLong(1, id);
             return deleteDriverStatement.executeUpdate() > 0;
         } catch (SQLException e) {
+            logger.error("Couldn't delete driver with id " + id, e.getMessage());
             throw new DataProcessingException("Couldn't delete driver with id " + id, e);
         }
     }
